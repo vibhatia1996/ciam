@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>FCT | Login Prototype</title>
+<style>
+:root{--navy:#141D3A;--heading:#2F2F2F;--body:#71869E;--blue:#0075C3;--border:#C7CED8;--page:#F7FAFC;--white:#fff}
+*{box-sizing:border-box}html,body{margin:0;min-height:100%;font-family: "Barlow";color:var(--heading);background:var(--page)}body{min-height:100vh}button{font:inherit}
+.page{display:grid;grid-template-columns:50% 50%;min-height:100vh}
+.hero{background:var(--navy);color:#fff;display:flex;align-items:center;justify-content:center;padding:54px 0;overflow:hidden}
+.carousel-shell{width:min(590px,calc(100% - 72px));position:relative}
+.carousel{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scroll-behavior:smooth;scrollbar-width:none;overscroll-behavior-inline:contain;touch-action:pan-x pan-y}
+.carousel::-webkit-scrollbar{display:none}
+.slide{flex:0 0 100%;scroll-snap-align:start;scroll-snap-stop:always;min-width:0;padding:0 2px}
+.hero-image,.visual{display:block;width:100%;aspect-ratio:444/292;border-radius:38px;overflow:hidden;background:#eef3f6}
+.hero-image{object-fit:cover}
+.visual.welcome svg{display:block;width:100%;height:100%}
+.slide h1{margin:24px 0 14px;font-size:28px;line-height:1.15;font-weight:700;letter-spacing:-.2px;color:#fff}
+.slide p{margin:0;max-width:525px;font-size:18px;line-height:1.5;color:#fff}
+.dots{display:flex;justify-content:center;gap:7px;margin-top:19px}
+.dot{width:10px;height:10px;padding:0;border:0;border-radius:50%;background:#71809B;cursor:pointer}
+.dot.active{background:#fff}.dot:focus-visible{outline:2px solid #fff;outline-offset:3px}
+.visual{position:relative;background:linear-gradient(145deg,#f6f8fa,#dfe8ef)}
+.visual.home:before{content:"";position:absolute;width:190px;height:118px;left:50%;top:50%;transform:translate(-50%,-33%);background:#fff;border-radius:8px;box-shadow:0 10px 28px rgba(20,29,58,.16)}
+.visual.home:after{content:"";position:absolute;width:135px;height:135px;left:50%;top:32%;transform:translate(-50%,-50%) rotate(45deg);background:#dceff9;border-radius:8px}
+.visual .door{position:absolute;z-index:3;width:42px;height:70px;background:#013A6F;left:50%;bottom:49px;transform:translateX(-50%);border-radius:4px 4px 0 0}
+.visual .window{position:absolute;z-index:3;width:42px;height:38px;background:#bfe0f4;bottom:85px;border:5px solid #fff;border-radius:3px}
+.visual .window.left{left:31%}.visual .window.right{right:31%}
+.visual.keys{background:linear-gradient(145deg,#f7f9fb,#e8eef4)}
+.keyring{position:absolute;width:132px;height:132px;border:18px solid #c9d5df;border-radius:50%;left:50%;top:46%;transform:translate(-50%,-50%)}
+.key{position:absolute;width:26px;height:116px;background:#013A6F;border-radius:12px;left:51%;top:48%;transform-origin:13px 12px;transform:rotate(-28deg)}
+.key:after{content:"";position:absolute;width:47px;height:27px;background:#013A6F;left:-11px;bottom:-5px;clip-path:polygon(0 0,100% 0,100% 45%,72% 45%,72% 100%,44% 100%,44% 45%,0 45%)}
+.key.two{background:#0075C3;transform:rotate(35deg);left:48%;top:49%;height:102px}.key.two:after{background:#0075C3}
+.main{display:flex;align-items:center;justify-content:center;padding:56px 64px;background:var(--page)}
+.stack{width:672px;max-width:100%}
+.card{width:100%;min-height:217px;background:#fff;border:1px solid var(--border);border-radius:8px;padding:37px 32px 34px;display:grid;grid-template-columns:minmax(0,1fr) 24px;gap:22px;align-items:center;margin-bottom:18px}
+.card.actionable{cursor:pointer;transition:border-color .16s ease,box-shadow .16s ease,transform .16s ease}.card.actionable:hover{border-color:var(--blue);box-shadow:0 8px 24px rgba(0,73,135,.10);transform:translateY(-1px)}.card.actionable:focus-visible{outline:3px solid rgba(0,117,195,.25);outline-offset:3px}
+.card h2{margin:0 0 18px;font-size:29px;line-height:1.18;font-weight:700;letter-spacing:-.15px}.card p{margin:0 0 23px;max-width:575px;font-size:17px;line-height:1.55;color:var(--body)}.link{font-size:17px;font-weight:600;color:var(--blue)}.chev{justify-self:end;color:var(--blue);font-size:37px;line-height:1;font-weight:300}
+@media(max-width:960px){.page{grid-template-columns:1fr}.hero{padding:44px 0}.carousel-shell{width:min(590px,calc(100% - 40px))}.main{padding:42px 28px 52px}}
+@media(max-width:600px){.hero{padding:28px 0}.carousel-shell{width:calc(100% - 28px)}.hero-image,.visual{border-radius:26px}.slide h1{font-size:24px;margin-top:20px}.slide p{font-size:16px}.main{padding:26px 16px 38px}.card{min-height:0;padding:26px 22px}.card h2{font-size:23px;margin-bottom:13px}.card p,.link{font-size:16px}}
+</style>
+</head>
+<body>
+<div class="page">
+  <aside class="hero">
+    <div class="carousel-shell">
+      <div class="carousel" id="heroCarousel" aria-label="FCT welcome carousel">
+        <section class="slide" data-index="0">
+          <div class="visual welcome" role="img" aria-label="Illustration of a home purchase and mortgage documents">
+            <svg viewBox="0 0 444 292" aria-hidden="true" focusable="false">
+              <defs>
+                <linearGradient id="welcomeBg" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0" stop-color="#F8FBFD"/>
+                  <stop offset="1" stop-color="#E6F1F7"/>
+                </linearGradient>
+                <filter id="shadow" x="-20%" y="-20%" width="140%" height="160%">
+                  <feDropShadow dx="0" dy="8" stdDeviation="10" flood-color="#141D3A" flood-opacity=".12"/>
+                </filter>
+              </defs>
+              <rect width="444" height="292" rx="38" fill="url(#welcomeBg)"/>
+              <circle cx="365" cy="54" r="56" fill="#DCEFF9"/>
+              <circle cx="62" cy="238" r="72" fill="#EEF6FA"/>
+
+              <g filter="url(#shadow)">
+                <rect x="59" y="69" width="212" height="156" rx="14" fill="#FFFFFF"/>
+                <path d="M86 145 L164 83 L242 145 V207 H86 Z" fill="#F3F7FA"/>
+                <path d="M75 146 L164 72 L253 146" fill="none" stroke="#013A6F" stroke-width="13" stroke-linecap="round" stroke-linejoin="round"/>
+                <rect x="146" y="157" width="38" height="50" rx="4" fill="#013A6F"/>
+                <rect x="102" y="154" width="28" height="27" rx="3" fill="#BFE0F4" stroke="#FFFFFF" stroke-width="5"/>
+                <rect x="198" y="154" width="28" height="27" rx="3" fill="#BFE0F4" stroke="#FFFFFF" stroke-width="5"/>
+              </g>
+
+              <g filter="url(#shadow)">
+                <rect x="246" y="107" width="143" height="112" rx="12" fill="#FFFFFF"/>
+                <rect x="267" y="132" width="78" height="8" rx="4" fill="#304A65" opacity=".85"/>
+                <rect x="267" y="151" width="99" height="6" rx="3" fill="#C7D3DD"/>
+                <rect x="267" y="166" width="83" height="6" rx="3" fill="#C7D3DD"/>
+                <rect x="267" y="181" width="60" height="6" rx="3" fill="#C7D3DD"/>
+                <circle cx="357" cy="188" r="17" fill="#0075C3"/>
+                <path d="M349 188l6 6 11-13" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+              </g>
+
+              <g transform="translate(274 62) rotate(13)">
+                <circle cx="0" cy="0" r="19" fill="none" stroke="#E8854E" stroke-width="9"/>
+                <rect x="12" y="-4" width="58" height="8" rx="4" fill="#E8854E"/>
+                <path d="M58 0v14h12V6h11V0" fill="none" stroke="#E8854E" stroke-width="8" stroke-linejoin="round"/>
+              </g>
+
+              <g>
+                <circle cx="102" cy="52" r="8" fill="#0075C3" opacity=".9"/>
+                <circle cx="121" cy="52" r="8" fill="#013A6F" opacity=".8"/>
+                <circle cx="140" cy="52" r="8" fill="#E8854E" opacity=".85"/>
+              </g>
+            </svg>
+          </div>
+          <h1>Welcome to FCT!</h1>
+          <p>Learn how FCT helps teams see what’s really happening, execute faster with AI, communicate clearly, and stay ahead of issues.</p>
+        </section>
+        <section class="slide" data-index="1">
+          <div class="visual home" role="img" aria-label="Illustration of a home"><span class="door"></span><span class="window left"></span><span class="window right"></span></div>
+          <h1>Built around real estate</h1>
+          <p>Access tools and information designed to make property and mortgage transactions easier to manage.</p>
+        </section>
+        <section class="slide" data-index="2">
+          <div class="visual keys" role="img" aria-label="Illustration of house keys"><span class="keyring"></span><span class="key"></span><span class="key two"></span></div>
+          <h1>Get the right access</h1>
+          <p>Already registered? Log in. New to FCT? Start an access request to get set up for the products you need.</p>
+        </section>
+      </div>
+      <div class="dots" aria-label="Carousel navigation">
+        <button class="dot active" type="button" data-slide="0" aria-label="Go to slide 1" aria-current="true"></button>
+        <button class="dot" type="button" data-slide="1" aria-label="Go to slide 2"></button>
+        <button class="dot" type="button" data-slide="2" aria-label="Go to slide 3"></button>
+      </div>
+    </div>
+  </aside>
+  <main class="main">
+    <div class="stack">
+      <div class="card actionable" id="signInCard" role="button" tabindex="0" aria-label="Sign in to an existing account">
+        <div><h2>Login</h2><p>Already have access? Sign in to access your products</p><span class="link">Sign in</span></div><div class="chev" aria-hidden="true">›</div>
+      </div>
+      <div class="card actionable" id="startApplicationCard" role="button" tabindex="0" aria-label="Start a new access application">
+        <div><h2>New access request</h2><p>First time here? Submit a request to access. Our team reviews all requests within 24 hours</p><span class="link">Start application</span></div><div class="chev" aria-hidden="true">›</div>
+      </div>
+    </div>
+  </main>
+</div>
+<script>
+const carousel=document.getElementById('heroCarousel');
+const dots=[...document.querySelectorAll('.dot')];
+let current=0;
+function setActive(i){current=i;dots.forEach((d,n)=>{d.classList.toggle('active',n===i);d.setAttribute('aria-current',n===i?'true':'false')})}
+dots.forEach((dot,i)=>dot.addEventListener('click',()=>{carousel.scrollTo({left:i*carousel.clientWidth,behavior:'smooth'});setActive(i)}));
+let raf;
+carousel.addEventListener('scroll',()=>{cancelAnimationFrame(raf);raf=requestAnimationFrame(()=>{const i=Math.max(0,Math.min(2,Math.round(carousel.scrollLeft/carousel.clientWidth)));if(i!==current)setActive(i)})});
+window.addEventListener('resize',()=>carousel.scrollTo({left:current*carousel.clientWidth,behavior:'auto'}));
+const startApplicationCard=document.getElementById('startApplicationCard');
+const signInCard=document.getElementById('signInCard');
+function openCreateAccount(){window.location.href='ciam-step-2.html'}
+function openSignIn(){window.location.href='ciam-sign-in.html'}
+startApplicationCard.addEventListener('click',openCreateAccount);
+startApplicationCard.addEventListener('keydown',event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();openCreateAccount()}});
+signInCard.addEventListener('click',openSignIn);
+signInCard.addEventListener('keydown',event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();openSignIn()}});
+</script>
+</body>
+</html>
