@@ -498,6 +498,45 @@
       overflow-wrap: anywhere;
     }
 
+    .consent-field {
+      max-width: 620px;
+      margin-top: 24px;
+    }
+
+    .consent-label {
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+      margin: 0;
+      color: var(--ink);
+      font-size: 14px;
+      font-weight: 400;
+      line-height: 1.45;
+      cursor: pointer;
+    }
+
+    .consent-label input {
+      flex: 0 0 auto;
+      width: 18px;
+      height: 18px;
+      margin: 2px 0 0;
+      accent-color: var(--blue);
+    }
+
+    .consent-label a {
+      color: var(--blue);
+      font-weight: 600;
+      text-decoration: underline;
+      text-underline-offset: 2px;
+    }
+
+    .consent-label a:hover { color: var(--navy-dark); }
+
+    .consent-label a:focus-visible {
+      outline: 2px solid var(--blue);
+      outline-offset: 2px;
+    }
+
     .form-status {
       margin: 18px 0 0;
       padding: 11px 12px;
@@ -776,6 +815,14 @@
             </dl>
           </section>
 
+          <div class="field consent-field" id="terms-consent-field">
+            <label class="consent-label" for="terms-consent">
+              <input id="terms-consent" name="termsConsent" type="checkbox" required aria-describedby="terms-consent-error" />
+              <span>By continuing, you agree to FCT’s <a href="#terms-and-conditions" id="terms-and-conditions-link">Terms and Conditions</a>.</span>
+            </label>
+            <p class="error-message" id="terms-consent-error" role="alert">You must agree to the Terms and Conditions to continue.</p>
+          </div>
+
           <p class="form-status" id="form-status" role="alert" hidden>Please complete the highlighted information before submitting.</p>
         </div>
         <div class="actions">
@@ -829,7 +876,7 @@
         1: ['profession'],
         2: [],
         3: ['province', 'firm-name'],
-        4: ['user-search']
+        4: ['user-search', 'terms-consent']
       };
 
       const firmsByProvince = {
@@ -1219,6 +1266,11 @@
         if (!event.target.closest('[data-combobox="user"]')) closeCombobox(userSearch, userOptions);
       });
 
+      document.getElementById('terms-and-conditions-link').addEventListener('click', event => {
+        event.preventDefault();
+        window.alert('The Terms and Conditions would open here in the production experience.');
+      });
+
       form.addEventListener('input', event => {
         formStatus.hidden = true;
         const field = event.target.closest('.field');
@@ -1233,7 +1285,8 @@
         formStatus.hidden = true;
         trackEvent('enrollment_step_completed', {
           step_name: 'personal_information',
-          step_number: 4
+          step_number: 4,
+          terms_consent: true
         });
         trackEvent('enrollment_submitted', {
           profession: profession.value,
