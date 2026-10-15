@@ -445,7 +445,7 @@
     const mfaMethodStep = document.getElementById('mfaMethodStep');
     const mfaCodeStep = document.getElementById('mfaCodeStep');
     const staySignedInStep = document.getElementById('staySignedInStep');
-    const productName = document.querySelector('.product-name');
+    const productLogo = document.querySelector('.product-logo');
     const signinTitle = document.getElementById('signin-title');
     const signinIntro = document.querySelector('.signin-shell > .intro');
     const email = document.getElementById('email');
@@ -464,8 +464,8 @@
       return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
     }
     function setSigninHeader(title, intro, identifier = 'FCTCIAM'){
-      productName.style.display = 'block';
-      productName.textContent = identifier;
+      productLogo.style.display = 'block';
+      productLogo.textContent = identifier;
       signinTitle.style.display = 'block';
       signinTitle.textContent = title;
       signinIntro.textContent = intro || '';
@@ -539,7 +539,7 @@
       }
       error.classList.remove('show');
       mfaCodeStep.classList.remove('show');
-      productName.style.display = 'none';
+      productLogo.style.display = 'none';
       signinTitle.style.display = 'none';
       signinIntro.style.display = 'none';
       staySignedInStep.classList.add('show');
