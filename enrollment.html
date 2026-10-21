@@ -290,6 +290,24 @@
       font-size: 13px;
     }
 
+    .combobox-add {
+      border-top: 1px solid var(--line-soft);
+      color: var(--blue);
+      font-weight: 600;
+    }
+
+    .manual-firm {
+      display: none;
+      margin-top: 16px;
+      padding: 16px;
+      background: #f7f9fb;
+      border: 1px solid var(--line-soft);
+      border-left: 3px solid var(--blue);
+    }
+
+    .manual-firm.visible { display: block; }
+    .manual-firm .field { max-width: none; }
+
     .required::after {
       content: " *";
       color: var(--danger);
@@ -774,7 +792,14 @@
                 <ul class="combobox-list" id="firm-options" role="listbox" hidden></ul>
               </div>
               <p class="field-hint">Start typing to search, then select a firm from the results.</p>
-              <p class="error-message" role="alert">Select a firm or organization from the list.</p>
+              <p class="error-message" role="alert">Select a firm or organization from the list, or add one manually.</p>
+              <div class="manual-firm" id="manual-firm" aria-live="polite">
+                <div class="field">
+                  <label class="required" for="manual-firm-name">Firm or organization name</label>
+                  <input id="manual-firm-name" name="manualFirmName" type="text" placeholder="Enter firm or organization name" />
+                  <p class="field-hint">Enter the name exactly as you would like it to appear.</p>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -862,6 +887,9 @@
       const firmName = document.getElementById('firm-name');
       const firmOptions = document.getElementById('firm-options');
       const firmTrigger = document.getElementById('firm-trigger');
+      const manualFirm = document.getElementById('manual-firm');
+      const manualFirmName = document.getElementById('manual-firm-name');
+      let addingFirmManually = false;
       const userSearch = document.getElementById('user-search');
       const userOptions = document.getElementById('user-options');
       const userTrigger = document.getElementById('user-trigger');
@@ -983,7 +1011,28 @@
           return item;
         });
 
-        firmOptions.replaceChildren(...(items.length ? items : [createEmptyResult('No matching firms found.') ]));
+        const addItem = document.createElement('li');
+        addItem.setAttribute('role', 'option');
+        const addButton = document.createElement('button');
+        addButton.type = 'button';
+        addButton.className = 'combobox-option combobox-add';
+        addButton.textContent = "Can't find your firm or organization? Add it manually";
+        addButton.addEventListener('click', () => {
+          addingFirmManually = true;
+          manualFirm.classList.add('visible');
+          manualFirmName.required = true;
+          firmName.value = 'Add a firm or organization manually';
+          firmName.setCustomValidity('');
+          document.getElementById('firm-name-field').classList.remove('invalid');
+          closeCombobox(firmName, firmOptions);
+          manualFirmName.focus();
+          usersForFirm = '';
+          resetUserSelection();
+          trackEvent('firm_manual_entry_selected', { province: province.value });
+        });
+        addItem.appendChild(addButton);
+        const results = items.length ? items : [createEmptyResult('No matching firms found.')];
+        firmOptions.replaceChildren(...results, addItem);
         openCombobox(firmName, firmOptions);
       }
 
@@ -991,6 +1040,10 @@
         const firms = firmsByProvince[province.value] || [];
         firmOptions.replaceChildren();
         firmName.value = '';
+        addingFirmManually = false;
+        manualFirm.classList.remove('visible');
+        manualFirmName.value = '';
+        manualFirmName.required = false;
         firmName.disabled = firms.length === 0;
         firmTrigger.disabled = firms.length === 0;
         firmName.placeholder = firms.length ? 'Search for your firm or organization' : 'Select a province first';
@@ -1003,6 +1056,11 @@
 
       function validateFirmSelection() {
         const firms = firmsByProvince[province.value] || [];
+        if (addingFirmManually) {
+          const manualValid = manualFirmName.value.trim().length > 0;
+          firmName.setCustomValidity(manualValid ? '' : 'Enter a firm or organization name.');
+          return;
+        }
         const hasExactMatch = firms.some(name => name.toLowerCase() === firmName.value.trim().toLowerCase());
         firmName.setCustomValidity(hasExactMatch ? '' : 'Select a firm from the list.');
       }
@@ -1043,12 +1101,13 @@
       }
 
       function updateUserOptions() {
-        if (usersForFirm === firmName.value && availableUsers.length) return;
-        usersForFirm = firmName.value;
-        availableUsers = createFirmUsers(firmName.value);
+        const selectedFirm = addingFirmManually ? manualFirmName.value.trim() : firmName.value;
+        if (usersForFirm === selectedFirm && availableUsers.length) return;
+        usersForFirm = selectedFirm;
+        availableUsers = createFirmUsers(selectedFirm);
         userOptions.replaceChildren();
         resetUserSelection();
-        document.getElementById('user-search-hint').textContent = `Search users associated with ${firmName.value}.`;
+        document.getElementById('user-search-hint').textContent = `Search users associated with ${selectedFirm}.`;
       }
 
       function renderUserResults() {
@@ -1204,7 +1263,7 @@
           if (currentStep === 2) properties.product_ids = [...document.querySelectorAll('input[name="products"]:checked')].map(input => input.id.replace('product-', ''));
           if (currentStep === 3) {
             properties.province = province.value;
-            properties.firm_match_status = 'matched';
+            properties.firm_match_status = addingFirmManually ? 'manual' : 'matched';
           }
           trackEvent('enrollment_step_completed', properties);
           showStep(currentStep + 1);
@@ -1224,11 +1283,17 @@
 
       province.addEventListener('change', updateFirmOptions);
       firmName.addEventListener('input', () => {
+        if (addingFirmManually) { addingFirmManually = false; manualFirm.classList.remove('visible'); manualFirmName.required = false; }
         firmName.setCustomValidity('');
         usersForFirm = '';
         renderFirmResults();
       });
       firmName.addEventListener('change', validateFirmSelection);
+      manualFirmName.addEventListener('input', () => {
+        firmName.setCustomValidity('');
+        usersForFirm = '';
+        resetUserSelection();
+      });
       firmName.addEventListener('focus', () => {
         if (!firmName.disabled) renderFirmResults();
       });
@@ -1291,7 +1356,7 @@
         trackEvent('enrollment_submitted', {
           profession: profession.value,
           province: province.value,
-          firm_match_status: 'matched',
+          firm_match_status: addingFirmManually ? 'manual' : 'matched',
           profile_match_status: 'matched',
           product_ids: [...document.querySelectorAll('input[name="products"]:checked')].map(input => input.id.replace('product-', '')),
           source: 'prototype'
