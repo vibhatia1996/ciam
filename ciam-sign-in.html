@@ -153,10 +153,40 @@
     .error.show{display:block}
     .below-row{
       display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:20px;
+      flex-direction:column;
+      align-items:stretch;
+      gap:18px;
       margin-top:8px;
+    }
+    .below-row .create-link{align-self:flex-start;}
+    .below-row .primary{align-self:flex-end;}
+    .back-identity[hidden]{display:none !important;}
+    .back-identity{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      width:max-content;
+      margin:0 0 18px;
+      padding:0;
+      border:0;
+      background:none;
+      color:var(--link);
+      font:inherit;
+      font-size:15px;
+      font-weight:500;
+      line-height:1.4;
+      text-decoration:none;
+      cursor:pointer;
+    }
+    .back-identity:hover,
+    .back-identity:visited{
+      color:var(--link);
+      text-decoration:none;
+    }
+    .back-identity:focus-visible{
+      outline:3px solid rgba(0,90,158,.25);
+      outline-offset:3px;
+      text-decoration:none;
     }
     .create-link{
       color:var(--link);
@@ -350,7 +380,6 @@
       main{padding:34px 20px 42px;align-items:flex-start}
       .signin-shell{margin-top:8vh;padding:32px 24px}
       h1{font-size:30px}
-      .below-row{align-items:flex-end}
       footer{justify-content:center;padding:0 16px;gap:18px}
     }
   </style>
@@ -365,6 +394,7 @@
   <main>
     <section class="signin-shell" aria-labelledby="signin-title">
      <img src="fct_logo.svg" alt="FCT" class="product-logo">
+      <button type="button" class="back-identity" id="passwordBackIdentity" hidden aria-label="Back to email">← <span id="passwordBackEmail"></span></button>
       <h1 id="signin-title">Sign in</h1>
       <p class="intro">Sign in to your FCT account</p>
 
@@ -373,11 +403,10 @@
           <label for="email">Work email</label>
           <input id="email" type="email" inputmode="email" autocomplete="email" placeholder="Enter your work email address" aria-describedby="emailError" />
           <div id="emailError" class="error">Enter a valid work email to continue.</div>
-        </div>
-
-        <div class="below-row">
-          <button type="button" class="create-link" id="createAccount">No account? Create one</button>
-          <button type="button" class="primary" id="nextBtn">Next</button>
+          <div class="below-row">
+            <button type="button" class="create-link" id="createAccount">No account? Create one</button>
+            <button type="button" class="primary" id="nextBtn">Next</button>
+          </div>
         </div>
       </div>
 
@@ -388,7 +417,6 @@
           <div id="passwordError" class="error">Enter your password to continue.</div>
         </div>
         <div class="actions-password">
-          <button type="button" class="back-link" id="backBtn">Back</button>
           <button type="button" class="primary" id="signInBtn">Sign in</button>
         </div>
       </div>
@@ -448,6 +476,8 @@
     const productLogo = document.querySelector('.product-logo');
     const signinTitle = document.getElementById('signin-title');
     const signinIntro = document.querySelector('.signin-shell > .intro');
+    const passwordBackIdentity = document.getElementById('passwordBackIdentity');
+    const passwordBackEmail = document.getElementById('passwordBackEmail');
     const email = document.getElementById('email');
     const password = document.getElementById('password');
     const mfaCode = document.getElementById('mfaCode');
@@ -482,12 +512,15 @@
       emailError.classList.remove('show');
       emailStep.style.display = 'none';
       passwordStep.classList.add('show');
+      passwordBackEmail.textContent = email.value.trim();
+      passwordBackIdentity.hidden = false;
       password.focus();
     });
 
-    document.getElementById('backBtn').addEventListener('click', () => {
+    passwordBackIdentity.addEventListener('click', () => {
       hideNote();
       passwordStep.classList.remove('show');
+      passwordBackIdentity.hidden = true;
       emailStep.style.display = 'block';
       setSigninHeader('Sign in', 'Sign in to access fctciam');
       email.focus();
@@ -502,6 +535,7 @@
       }
       passwordError.classList.remove('show');
       passwordStep.classList.remove('show');
+      passwordBackIdentity.hidden = true;
       mfaMethodStep.classList.add('show');
       document.getElementById('emailCodeText').textContent = `Email code to ${email.value.trim()}`;
       setSigninHeader('Verify your identity', '', email.value.trim());
@@ -518,6 +552,8 @@
     document.getElementById('mfaMethodCancelBtn').addEventListener('click', () => {
       mfaMethodStep.classList.remove('show');
       passwordStep.classList.add('show');
+      passwordBackEmail.textContent = email.value.trim();
+      passwordBackIdentity.hidden = false;
       setSigninHeader('Sign in', 'Sign in to access fctciam');
       password.focus();
     });
