@@ -296,7 +296,8 @@
       font-weight: 600;
     }
 
-    .manual-firm {
+    .manual-firm,
+    .manual-contact {
       display: none;
       margin-top: 16px;
       padding: 16px;
@@ -305,15 +306,30 @@
       border-left: 3px solid var(--blue);
     }
 
-    .manual-firm.visible { display: block; }
-    .manual-firm .field { max-width: none; }
+    .manual-firm.visible,
+    .manual-contact.visible { display: block; }
+    .manual-firm .field,
+    .manual-contact .field { max-width: none; }
+
+    .manual-contact h3 {
+      margin: 0 0 18px;
+      color: var(--navy-dark);
+      font-size: 18px;
+      font-weight: 600;
+    }
+
+    .manual-contact .address-heading {
+      margin-top: 26px;
+      padding-top: 20px;
+      border-top: 1px solid var(--line-soft);
+    }
 
     .required::after {
       content: " *";
       color: var(--danger);
     }
 
-    select, input[type="text"], input[type="email"] {
+    select, input[type="text"], input[type="email"], input[type="tel"], textarea {
       width: 100%;
       min-height: 44px;
       padding: 9px 38px 9px 12px;
@@ -322,6 +338,13 @@
       border: 1px solid #aeb9c5;
       border-radius: 2px;
       outline: none;
+    }
+
+    textarea {
+      min-height: 104px;
+      padding-right: 12px;
+      resize: vertical;
+      font: inherit;
     }
 
     input[type="search"] {
@@ -824,7 +847,7 @@
                 <ul class="combobox-list" id="user-options" role="listbox" hidden></ul>
               </div>
               <p class="field-hint" id="user-search-hint">Start typing to search for a user at the selected firm.</p>
-              <p class="error-message" role="alert">Select a user from the list.</p>
+              <p class="error-message" role="alert">Select a user from the list, or add one manually.</p>
             </div>
           </div>
 
@@ -838,6 +861,80 @@
               <div class="read-only-item"><dt>Phone number on file</dt><dd id="detail-phone"></dd></div>
               <div class="read-only-item span-2"><dt>Firm or organization</dt><dd id="detail-firm"></dd></div>
             </dl>
+          </section>
+
+          <section class="manual-contact" id="manual-contact" aria-live="polite" aria-labelledby="manual-contact-heading">
+            <h3 id="manual-contact-heading">Add primary contact manually</h3>
+            <div class="form-grid">
+              <div class="field">
+                <label class="required" for="manual-first-name">First name</label>
+                <input id="manual-first-name" name="manualFirstName" type="text" autocomplete="given-name" />
+                <p class="error-message" role="alert">Enter the first name.</p>
+              </div>
+              <div class="field">
+                <label for="manual-middle-name">Middle name</label>
+                <input id="manual-middle-name" name="manualMiddleName" type="text" autocomplete="additional-name" />
+              </div>
+              <div class="field">
+                <label class="required" for="manual-last-name">Last name</label>
+                <input id="manual-last-name" name="manualLastName" type="text" autocomplete="family-name" />
+                <p class="error-message" role="alert">Enter the last name.</p>
+              </div>
+              <div class="field">
+                <label class="required" for="manual-business-phone">Business phone</label>
+                <input id="manual-business-phone" name="manualBusinessPhone" type="tel" autocomplete="tel" placeholder="XXX-XXX-XXXX" />
+                <p class="error-message" role="alert">Enter a business phone number.</p>
+              </div>
+              <div class="field">
+                <label for="manual-cell-phone">Business cell phone</label>
+                <input id="manual-cell-phone" name="manualCellPhone" type="tel" autocomplete="tel" placeholder="XXX-XXX-XXXX" />
+              </div>
+              <div class="field">
+                <label for="manual-fax-number">Business fax number</label>
+                <input id="manual-fax-number" name="manualFaxNumber" type="tel" placeholder="XXX-XXX-XXXX" />
+              </div>
+              <div class="field span-2">
+                <label class="required" for="manual-business-email">Business email address</label>
+                <input id="manual-business-email" name="manualBusinessEmail" type="email" autocomplete="email" placeholder="name@business.ca" />
+                <p class="error-message" role="alert">Enter a valid business email address.</p>
+              </div>
+              <div class="field span-2">
+                <label for="manual-comments">Comments</label>
+                <textarea id="manual-comments" name="manualComments" placeholder="Add any relevant comments"></textarea>
+              </div>
+            </div>
+
+            <h3 class="address-heading">Address</h3>
+            <div class="form-grid">
+              <div class="field">
+                <label for="manual-unit-number">Unit number</label>
+                <input id="manual-unit-number" name="manualUnitNumber" type="text" />
+              </div>
+              <div class="field">
+                <label class="required" for="manual-street-number">Street number</label>
+                <input id="manual-street-number" name="manualStreetNumber" type="text" inputmode="numeric" />
+                <p class="error-message" role="alert">Enter the street number.</p>
+              </div>
+              <div class="field span-2">
+                <label class="required" for="manual-street-address">Street address</label>
+                <input id="manual-street-address" name="manualStreetAddress" type="text" autocomplete="address-line1" />
+                <p class="error-message" role="alert">Enter the street address.</p>
+              </div>
+              <div class="field span-2">
+                <label for="manual-address-line-2">Address line 2</label>
+                <input id="manual-address-line-2" name="manualAddressLine2" type="text" autocomplete="address-line2" />
+              </div>
+              <div class="field">
+                <label class="required" for="manual-city">City</label>
+                <input id="manual-city" name="manualCity" type="text" autocomplete="address-level2" />
+                <p class="error-message" role="alert">Enter the city.</p>
+              </div>
+              <div class="field">
+                <label class="required" for="manual-postal-code">Postal code</label>
+                <input id="manual-postal-code" name="manualPostalCode" type="text" autocomplete="postal-code" placeholder="A1A 1A1" />
+                <p class="error-message" role="alert">Enter a valid Canadian postal code.</p>
+              </div>
+            </div>
           </section>
 
           <div class="field consent-field" id="terms-consent-field">
@@ -894,11 +991,18 @@
       const userOptions = document.getElementById('user-options');
       const userTrigger = document.getElementById('user-trigger');
       const userDetails = document.getElementById('user-details');
+      const manualContact = document.getElementById('manual-contact');
+      const manualContactRequiredIds = [
+        'manual-first-name', 'manual-last-name', 'manual-business-phone',
+        'manual-business-email', 'manual-street-number', 'manual-street-address',
+        'manual-city', 'manual-postal-code'
+      ];
       const formStatus = document.getElementById('form-status');
       let currentStep = 1;
       let availableUsers = [];
       let selectedUser = null;
       let usersForFirm = '';
+      let addingContactManually = false;
 
       const stepFields = {
         1: ['profession'],
@@ -1091,10 +1195,13 @@
 
       function resetUserSelection() {
         selectedUser = null;
+        addingContactManually = false;
         userSearch.value = '';
         userSearch.setCustomValidity('');
         closeCombobox(userSearch, userOptions);
         userDetails.classList.remove('visible');
+        manualContact.classList.remove('visible');
+        manualContactRequiredIds.forEach(id => { document.getElementById(id).required = false; });
         document.getElementById('user-search-field').classList.remove('invalid');
         ['detail-first-name', 'detail-last-name', 'detail-email', 'detail-role', 'detail-phone', 'detail-firm']
           .forEach(id => { document.getElementById(id).textContent = ''; });
@@ -1143,7 +1250,28 @@
           return item;
         });
 
-        userOptions.replaceChildren(...(items.length ? items : [createEmptyResult('No matching contacts found.') ]));
+        const addItem = document.createElement('li');
+        addItem.setAttribute('role', 'option');
+        const addButton = document.createElement('button');
+        addButton.type = 'button';
+        addButton.className = 'combobox-option combobox-add';
+        addButton.textContent = "Can't find the primary contact? Add them manually";
+        addButton.addEventListener('click', () => {
+          addingContactManually = true;
+          selectedUser = null;
+          userSearch.value = 'Add a primary contact manually';
+          userSearch.setCustomValidity('');
+          document.getElementById('user-search-field').classList.remove('invalid');
+          userDetails.classList.remove('visible');
+          manualContact.classList.add('visible');
+          manualContactRequiredIds.forEach(id => { document.getElementById(id).required = true; });
+          closeCombobox(userSearch, userOptions);
+          document.getElementById('manual-first-name').focus();
+          trackEvent('profile_manual_entry_selected', { firm: usersForFirm });
+        });
+        addItem.appendChild(addButton);
+        const results = items.length ? items : [createEmptyResult('No matching contacts found.')];
+        userOptions.replaceChildren(...results, addItem);
         openCombobox(userSearch, userOptions);
       }
 
@@ -1178,6 +1306,9 @@
       function showUserDetails(user) {
         const userChanged = selectedUser?.email !== user.email;
         selectedUser = user;
+        addingContactManually = false;
+        manualContact.classList.remove('visible');
+        manualContactRequiredIds.forEach(id => { document.getElementById(id).required = false; });
         if (userChanged) trackEvent('profile_selected', { profile_match_status: 'matched', profile_role: user.role });
         document.getElementById('detail-first-name').textContent = user.firstName;
         document.getElementById('detail-last-name').textContent = user.lastName;
@@ -1189,6 +1320,10 @@
       }
 
       function validateUserSelection() {
+        if (addingContactManually) {
+          userSearch.setCustomValidity('');
+          return;
+        }
         const match = availableUsers.find(user => user.displayValue.toLowerCase() === userSearch.value.trim().toLowerCase());
         userSearch.setCustomValidity(match ? '' : 'Select a user from the list.');
         if (match) showUserDetails(match);
@@ -1239,6 +1374,21 @@
           input.setAttribute('aria-invalid', String(!inputValid));
           if (!inputValid && !firstInvalid) firstInvalid = input;
           valid = valid && inputValid;
+        }
+        if (number === 4 && addingContactManually) {
+          for (const id of manualContactRequiredIds) {
+            const input = document.getElementById(id);
+            if (id === 'manual-postal-code') {
+              const postalCodeValid = /^[A-Za-z]\d[A-Za-z][ -]?\d[A-Za-z]\d$/.test(input.value.trim());
+              input.setCustomValidity(postalCodeValid ? '' : 'Enter a valid Canadian postal code.');
+            }
+            const field = input.closest('.field');
+            const inputValid = input.checkValidity();
+            field.classList.toggle('invalid', !inputValid);
+            input.setAttribute('aria-invalid', String(!inputValid));
+            if (!inputValid && !firstInvalid) firstInvalid = input;
+            valid = valid && inputValid;
+          }
         }
         if (!valid && firstInvalid) {
           trackEvent('validation_error_displayed', {
@@ -1305,6 +1455,11 @@
       });
 
       userSearch.addEventListener('input', () => {
+        if (addingContactManually) {
+          addingContactManually = false;
+          manualContact.classList.remove('visible');
+          manualContactRequiredIds.forEach(id => { document.getElementById(id).required = false; });
+        }
         userSearch.setCustomValidity('');
         renderUserResults();
         const match = availableUsers.find(user => user.displayValue.toLowerCase() === userSearch.value.trim().toLowerCase());
@@ -1357,7 +1512,7 @@
           profession: profession.value,
           province: province.value,
           firm_match_status: addingFirmManually ? 'manual' : 'matched',
-          profile_match_status: 'matched',
+          profile_match_status: addingContactManually ? 'manual' : 'matched',
           product_ids: [...document.querySelectorAll('input[name="products"]:checked')].map(input => input.id.replace('product-', '')),
           source: 'prototype'
         });
