@@ -217,8 +217,26 @@
       position: relative;
     }
 
-    .combobox > input[type="search"] {
+    .combobox > input[type="search"],
+    .combobox > input[type="text"] {
       padding-right: 42px;
+    }
+
+    .profession-combobox > input {
+      cursor: text;
+    }
+
+    .profession-combobox .combobox-list {
+      max-height: 360px;
+    }
+
+    .profession-combobox .combobox-option {
+      padding-top: 11px;
+      padding-bottom: 11px;
+    }
+
+    .profession-combobox .option-secondary {
+      line-height: 1.4;
     }
 
     .combobox-trigger {
@@ -766,18 +784,11 @@
           <p class="panel-copy">Tell us what you do so we can recommend the products that best fit your work.</p>
           <div class="field" id="profession-field">
             <label class="required" for="profession">Profession</label>
-            <select id="profession" name="profession" required>
-              <option value="">Select profession</option>
-              <option>Lawyer</option>
-              <option>Notary</option>
-              <option>Conveyancer</option>
-              <option>Law clerk</option>
-              <option>Legal assistant</option>
-              <option>Third party/Vendor</option>
-              <option>Financial institution</option>
-              <option>Mortgage broker</option>
-              <option>Mortgage broker admin</option>
-            </select>
+            <div class="combobox profession-combobox" data-combobox="profession">
+              <input id="profession" name="profession" type="text" placeholder="Select or search profession" autocomplete="off" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="profession-options" required />
+              <button class="combobox-trigger" id="profession-trigger" type="button" aria-label="Show profession options">⌄</button>
+              <ul class="combobox-list" id="profession-options" role="listbox" hidden></ul>
+            </div>
             <p class="error-message" role="alert">Select a profession to continue.</p>
           </div>
         </div>
@@ -1059,6 +1070,8 @@
       const progressValue = document.getElementById('progress-value');
       const stepCount = document.getElementById('step-count');
       const profession = document.getElementById('profession');
+      const professionOptionsList = document.getElementById('profession-options');
+      const professionTrigger = document.getElementById('profession-trigger');
       const province = document.getElementById('province');
       const firmName = document.getElementById('firm-name');
       const firmOptions = document.getElementById('firm-options');
@@ -1137,6 +1150,18 @@
         'Broker admin': ['product-broker-tracker']
       };
 
+      const professionOptions = [
+        { name: 'Lawyer', description: 'A licensed legal professional who advises clients and manages legal matters.' },
+        { name: 'Notary', description: 'A legal professional who authenticates documents and supports real estate transactions.' },
+        { name: 'Conveyancer', description: 'A professional who manages the legal transfer of property ownership.' },
+        { name: 'Law Clerk', description: 'A legal support professional who prepares documents and assists with legal files.' },
+        { name: 'Legal Assistant', description: 'An administrative professional who supports lawyers and legal teams.' },
+        { name: 'Third Party/Vendor', description: 'An external service provider supporting a transaction or legal process.' },
+        { name: 'Financial Institution', description: 'A bank, credit union or lender involved in financing and payouts.' },
+        { name: 'Broker', description: 'A mortgage professional who arranges financing between borrowers and lenders.' },
+        { name: 'Broker admin', description: 'An administrator who supports mortgage brokers and manages transaction details.' }
+      ];
+
       function updateRecommendations() {
         const recommended = recommendationMap[profession.value] || [];
         document.querySelectorAll('input[name="products"]').forEach(input => {
@@ -1169,6 +1194,50 @@
         item.className = 'combobox-empty';
         item.textContent = message;
         return item;
+      }
+
+      function renderProfessionOptions(showAll = false) {
+        const query = showAll ? '' : profession.value.trim().toLowerCase();
+        const matchingOptions = professionOptions.filter(option =>
+          option.name.toLowerCase().includes(query) ||
+          option.description.toLowerCase().includes(query)
+        );
+        const items = matchingOptions.map(option => {
+          const item = document.createElement('li');
+          item.setAttribute('role', 'option');
+          item.setAttribute('aria-selected', String(profession.value === option.name));
+          const button = document.createElement('button');
+          button.type = 'button';
+          button.className = 'combobox-option';
+          const primary = document.createElement('span');
+          primary.className = 'option-primary';
+          primary.textContent = option.name;
+          const secondary = document.createElement('span');
+          secondary.className = 'option-secondary';
+          secondary.textContent = option.description;
+          button.append(primary, secondary);
+          button.addEventListener('click', () => {
+            profession.value = option.name;
+            profession.setCustomValidity('');
+            profession.setAttribute('aria-invalid', 'false');
+            document.getElementById('profession-field').classList.remove('invalid');
+            closeCombobox(profession, professionOptionsList);
+            profession.focus();
+            trackEvent('profession_selected', { profession: option.name });
+          });
+          item.appendChild(button);
+          return item;
+        });
+        professionOptionsList.replaceChildren(...(items.length ? items : [createEmptyResult('No matching professions found.') ]));
+        openCombobox(profession, professionOptionsList);
+      }
+
+      function validateProfessionSelection() {
+        const match = professionOptions.find(option =>
+          option.name.toLowerCase() === profession.value.trim().toLowerCase()
+        );
+        if (match) profession.value = match.name;
+        profession.setCustomValidity(match ? '' : 'Select a profession from the list.');
       }
 
       function renderFirmResults() {
@@ -1467,6 +1536,7 @@
       }
 
       function validateStep(number) {
+        if (number === 1) validateProfessionSelection();
         if (number === 3) validateFirmSelection();
         if (number === 4) validateUserSelection();
         let valid = true;
@@ -1537,6 +1607,22 @@
       });
 
       province.addEventListener('change', updateFirmOptions);
+      profession.addEventListener('input', () => {
+        profession.setCustomValidity('');
+        renderProfessionOptions();
+      });
+      profession.addEventListener('click', () => {
+        if (professionOptionsList.hidden) renderProfessionOptions(true);
+        else closeCombobox(profession, professionOptionsList);
+      });
+      professionTrigger.addEventListener('click', () => {
+        if (professionOptionsList.hidden) {
+          renderProfessionOptions(true);
+          profession.focus();
+        } else {
+          closeCombobox(profession, professionOptionsList);
+        }
+      });
       firmName.addEventListener('input', () => {
         if (addingFirmManually) { addingFirmManually = false; manualFirm.classList.remove('visible'); manualFirmName.required = false; }
         firmName.setCustomValidity('');
@@ -1597,10 +1683,12 @@
         trackEvent('profile_accuracy_confirmed', { information_accurate: !isFlagged });
       });
 
+      enableListKeyboard(profession, professionOptionsList, renderProfessionOptions);
       enableListKeyboard(firmName, firmOptions, renderFirmResults);
       enableListKeyboard(userSearch, userOptions, renderUserResults);
 
       document.addEventListener('click', event => {
+        if (!event.target.closest('[data-combobox="profession"]')) closeCombobox(profession, professionOptionsList);
         if (!event.target.closest('[data-combobox="firm"]')) closeCombobox(firmName, firmOptions);
         if (!event.target.closest('[data-combobox="user"]')) closeCombobox(userSearch, userOptions);
       });
