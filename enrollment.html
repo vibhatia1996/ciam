@@ -543,6 +543,68 @@
       overflow-wrap: anywhere;
     }
 
+    .accuracy-feedback {
+      display: none;
+      margin-top: 12px;
+    }
+
+    .accuracy-feedback.visible { display: block; }
+
+    .accuracy-feedback-trigger {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      min-height: 36px;
+      margin: 0 0 0 2px;
+      padding: 7px 8px;
+      color: #6b7785;
+      background: transparent;
+      border: 0;
+      border-radius: 5px;
+      font-size: 13px;
+      font-weight: 400;
+      cursor: pointer;
+      text-decoration: none;
+    }
+
+    .accuracy-feedback-trigger:hover {
+      color: #465565;
+      background: #f1f3f5;
+    }
+
+    .accuracy-feedback-trigger[aria-pressed="true"] {
+      color: #465565;
+      background: #eceff2;
+    }
+
+    .accuracy-feedback-trigger:focus-visible {
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(0, 117, 195, 0.18);
+    }
+
+    .accuracy-feedback-icon {
+      width: 18px;
+      height: 18px;
+      fill: none;
+      stroke: currentColor;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      stroke-width: 1.7;
+    }
+
+    .accuracy-comments {
+      display: none;
+      max-width: 620px;
+      margin-top: 10px;
+      padding: 15px 16px;
+      background: #f5f6f7;
+      border-radius: 4px;
+    }
+
+    .accuracy-comments.visible { display: block; }
+
+    .accuracy-comments textarea { background: #fff; }
+
     .consent-field {
       max-width: 620px;
       margin-top: 24px;
@@ -867,6 +929,19 @@
             </dl>
           </section>
 
+          <div class="accuracy-feedback" id="accuracy-feedback">
+            <button class="accuracy-feedback-trigger" id="accuracy-feedback-trigger" type="button" aria-expanded="false" aria-pressed="false" aria-controls="accuracy-comments">
+              <svg class="accuracy-feedback-icon" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M7.5 3.75 4.25 3.75a1.5 1.5 0 0 0-1.5 1.5v7.5a1.5 1.5 0 0 0 1.5 1.5H7.5m0-10.5h7.1c1.2 0 2.27.76 2.66 1.9l2.2 6.38a1.67 1.67 0 0 1-1.58 2.22h-4.13v3.12a2.88 2.88 0 0 1-2.88 2.88l-3.37-6V3.75Z" />
+              </svg>
+              <span>This information isn’t accurate</span>
+            </button>
+            <div class="accuracy-comments field" id="accuracy-comments">
+              <label for="accuracy-comments-input">Additional comments <span class="optional-label">(optional)</span></label>
+              <textarea id="accuracy-comments-input" name="accuracyComments" placeholder="Tell us what needs to be corrected"></textarea>
+            </div>
+          </div>
+
           <section class="manual-contact" id="manual-contact" aria-live="polite" aria-labelledby="manual-contact-heading">
             <h3 id="manual-contact-heading">Add primary contact manually</h3>
             <div class="form-grid">
@@ -995,6 +1070,10 @@
       const userOptions = document.getElementById('user-options');
       const userTrigger = document.getElementById('user-trigger');
       const userDetails = document.getElementById('user-details');
+      const accuracyFeedback = document.getElementById('accuracy-feedback');
+      const accuracyFeedbackTrigger = document.getElementById('accuracy-feedback-trigger');
+      const accuracyComments = document.getElementById('accuracy-comments');
+      const accuracyCommentsInput = document.getElementById('accuracy-comments-input');
       const manualContact = document.getElementById('manual-contact');
       const manualContactRequiredIds = [
         'manual-first-name', 'manual-last-name', 'manual-business-phone',
@@ -1204,6 +1283,11 @@
         userSearch.setCustomValidity('');
         closeCombobox(userSearch, userOptions);
         userDetails.classList.remove('visible');
+        accuracyFeedback.classList.remove('visible');
+        accuracyComments.classList.remove('visible');
+        accuracyFeedbackTrigger.setAttribute('aria-expanded', 'false');
+        accuracyFeedbackTrigger.setAttribute('aria-pressed', 'false');
+        accuracyCommentsInput.value = '';
         manualContact.classList.remove('visible');
         manualContactRequiredIds.forEach(id => { document.getElementById(id).required = false; });
         document.getElementById('user-search-field').classList.remove('invalid');
@@ -1267,6 +1351,11 @@
           userSearch.setCustomValidity('');
           document.getElementById('user-search-field').classList.remove('invalid');
           userDetails.classList.remove('visible');
+          accuracyFeedback.classList.remove('visible');
+          accuracyComments.classList.remove('visible');
+          accuracyFeedbackTrigger.setAttribute('aria-expanded', 'false');
+          accuracyFeedbackTrigger.setAttribute('aria-pressed', 'false');
+          accuracyCommentsInput.value = '';
           manualContact.classList.add('visible');
           manualContactRequiredIds.forEach(id => { document.getElementById(id).required = true; });
           closeCombobox(userSearch, userOptions);
@@ -1320,7 +1409,14 @@
         document.getElementById('detail-role').textContent = user.role;
         document.getElementById('detail-phone').textContent = user.phone;
         document.getElementById('detail-firm').textContent = user.firm;
+        if (userChanged) {
+          accuracyComments.classList.remove('visible');
+          accuracyFeedbackTrigger.setAttribute('aria-expanded', 'false');
+          accuracyFeedbackTrigger.setAttribute('aria-pressed', 'false');
+          accuracyCommentsInput.value = '';
+        }
         userDetails.classList.add('visible');
+        accuracyFeedback.classList.add('visible');
       }
 
       function validateUserSelection() {
@@ -1334,6 +1430,11 @@
         else {
           selectedUser = null;
           userDetails.classList.remove('visible');
+          accuracyFeedback.classList.remove('visible');
+          accuracyComments.classList.remove('visible');
+          accuracyFeedbackTrigger.setAttribute('aria-expanded', 'false');
+          accuracyFeedbackTrigger.setAttribute('aria-pressed', 'false');
+          accuracyCommentsInput.value = '';
         }
       }
 
@@ -1471,6 +1572,11 @@
         else {
           selectedUser = null;
           userDetails.classList.remove('visible');
+          accuracyFeedback.classList.remove('visible');
+          accuracyComments.classList.remove('visible');
+          accuracyFeedbackTrigger.setAttribute('aria-expanded', 'false');
+          accuracyFeedbackTrigger.setAttribute('aria-pressed', 'false');
+          accuracyCommentsInput.value = '';
         }
       });
       userSearch.addEventListener('change', validateUserSelection);
@@ -1480,6 +1586,15 @@
           renderUserResults();
           userSearch.focus();
         } else closeCombobox(userSearch, userOptions);
+      });
+
+      accuracyFeedbackTrigger.addEventListener('click', () => {
+        const isFlagged = accuracyFeedbackTrigger.getAttribute('aria-pressed') !== 'true';
+        accuracyFeedbackTrigger.setAttribute('aria-pressed', String(isFlagged));
+        accuracyFeedbackTrigger.setAttribute('aria-expanded', String(isFlagged));
+        accuracyComments.classList.toggle('visible', isFlagged);
+        if (isFlagged) accuracyCommentsInput.focus();
+        trackEvent('profile_accuracy_confirmed', { information_accurate: !isFlagged });
       });
 
       enableListKeyboard(firmName, firmOptions, renderFirmResults);
@@ -1510,13 +1625,16 @@
         trackEvent('enrollment_step_completed', {
           step_name: 'personal_information',
           step_number: 4,
-          terms_consent: true
+          terms_consent: true,
+          information_accurate: addingContactManually ? null : accuracyFeedbackTrigger.getAttribute('aria-pressed') !== 'true'
         });
         trackEvent('enrollment_submitted', {
           profession: profession.value,
           province: province.value,
           firm_match_status: addingFirmManually ? 'manual' : 'matched',
           profile_match_status: addingContactManually ? 'manual' : 'matched',
+          information_accurate: addingContactManually ? null : accuracyFeedbackTrigger.getAttribute('aria-pressed') !== 'true',
+          information_accuracy_comments: addingContactManually || accuracyFeedbackTrigger.getAttribute('aria-pressed') !== 'true' ? '' : accuracyCommentsInput.value.trim(),
           product_ids: [...document.querySelectorAll('input[name="products"]:checked')].map(input => input.id.replace('product-', '')),
           source: 'prototype'
         });
