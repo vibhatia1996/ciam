@@ -425,6 +425,18 @@
           <div id="confirmPasswordError" class="error">Passwords must match.</div>
         </div>
 
+        <div class="field">
+          <label for="firstName">First name</label>
+          <input id="firstName" type="text" autocomplete="given-name" placeholder="Enter first name" />
+          <div id="firstNameError" class="error">Enter your first name to continue.</div>
+        </div>
+
+        <div class="field">
+          <label for="lastName">Last name</label>
+          <input id="lastName" type="text" autocomplete="family-name" placeholder="Enter last name" />
+          <div id="lastNameError" class="error">Enter your last name to continue.</div>
+        </div>
+
         <div class="details-actions">
           <button type="button" class="secondary" id="detailsBackBtn">Back</button>
           <button type="button" class="primary" id="detailsNextBtn">Next</button>
@@ -552,9 +564,17 @@
 
     document.getElementById('detailsNextBtn').addEventListener('click', () => {
       hideNote();
+      const firstName = document.getElementById('firstName');
+      const lastName = document.getElementById('lastName');
       const password = document.getElementById('password');
       const confirmPassword = document.getElementById('confirmPassword');
       let firstInvalid = null;
+      const firstNameError = document.getElementById('firstNameError');
+      if(!firstName.value.trim()){ firstNameError.classList.add('show'); firstInvalid = firstName; }
+      else firstNameError.classList.remove('show');
+      const lastNameError = document.getElementById('lastNameError');
+      if(!lastName.value.trim()){ lastNameError.classList.add('show'); firstInvalid ||= lastName; }
+      else lastNameError.classList.remove('show');
       const passwordError = document.getElementById('passwordError');
       if(!password.value){ passwordError.classList.add('show'); firstInvalid = password; }
       else passwordError.classList.remove('show');
@@ -566,7 +586,7 @@
       if(firstInvalid){
         trackEvent('validation_error_displayed', {
           step_name: 'password_creation',
-          field_name: firstInvalid.id === 'confirmPassword' ? 'password_confirmation' : 'password',
+          field_name: firstInvalid.id === 'confirmPassword' ? 'password_confirmation' : firstInvalid.id === 'firstName' ? 'first_name' : firstInvalid.id === 'lastName' ? 'last_name' : 'password',
           error_type: firstInvalid.id === 'confirmPassword' ? 'password_mismatch' : 'required'
         });
         firstInvalid.focus();
