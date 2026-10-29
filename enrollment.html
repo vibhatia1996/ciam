@@ -430,6 +430,31 @@
       margin-top: 18px;
     }
 
+    .product-controls {
+      display: flex;
+      justify-content: flex-end;
+      margin: 2px 0 10px;
+    }
+
+    .select-all-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin: 0;
+      color: #304a65;
+      font-size: 14px;
+      font-weight: 400;
+      cursor: pointer;
+    }
+
+    .select-all-label input {
+      width: 18px;
+      height: 18px;
+      margin: 0;
+      accent-color: var(--blue);
+      cursor: pointer;
+    }
+
     .product {
       position: relative;
       border-radius: 9px;
@@ -505,6 +530,8 @@
       border-radius: 4px;
       font-size: 13px;
     }
+
+    .selection-note[hidden] { display: none; }
 
     .selection-note > span:first-child {
       color: var(--navy-dark);
@@ -805,12 +832,19 @@
           <h2 class="panel-heading" id="products-heading">Recommended products</h2>
           <p class="panel-copy" id="product-recommendation-copy">Based on your profession, we’ve selected products that may be useful to you. Review the selection before continuing.</p>
 
+          <div class="product-controls">
+            <label class="select-all-label" for="select-all-products">
+              <input id="select-all-products" type="checkbox" />
+              <span>Select all</span>
+            </label>
+          </div>
+
           <div class="products" id="products-list">
             <article class="product">
               <label class="product-label" for="product-idv">
-                <input type="checkbox" id="product-idv" name="products" value="Identity verification" checked />
+                <input type="checkbox" id="product-idv" name="products" value="Client IDV" checked />
                 <span class="product-copy">
-                  <span class="product-name">Identity verification</span>
+                  <span class="product-name">Client IDV</span>
                   <span class="product-detail">Authenticate the identity of your clients with a fast and secure digital application.</span>
                 </span>
               </label>
@@ -857,7 +891,7 @@
             </article>
           </div>
 
-          <p class="selection-note"><span aria-hidden="true">ⓘ</span><span>These are recommendations only. You can add or remove products before continuing.</span></p>
+          <p class="selection-note" id="product-selection-note"><span aria-hidden="true">ⓘ</span><span>These are recommendations only. You can add or remove products before continuing.</span></p>
         </div>
         <div class="actions">
           <button class="btn btn-secondary" type="button" data-back>Back</button>
@@ -1072,6 +1106,8 @@
       const profession = document.getElementById('profession');
       const professionOptionsList = document.getElementById('profession-options');
       const professionTrigger = document.getElementById('profession-trigger');
+      const selectAllProducts = document.getElementById('select-all-products');
+      const productSelectionNote = document.getElementById('product-selection-note');
       const province = document.getElementById('province');
       const firmName = document.getElementById('firm-name');
       const firmOptions = document.getElementById('firm-options');
@@ -1162,20 +1198,39 @@
         { name: 'Mortgage broker admin', description: 'An administrator who supports mortgage brokers and manages transaction details.' }
       ];
 
+      function getVisibleProductInputs() {
+        return [...document.querySelectorAll('input[name="products"]')]
+          .filter(input => !input.closest('.product').hidden);
+      }
+
+      function updateSelectAllState() {
+        const visibleProducts = getVisibleProductInputs();
+        const selectedCount = visibleProducts.filter(input => input.checked).length;
+        selectAllProducts.disabled = visibleProducts.length === 0;
+        selectAllProducts.checked = visibleProducts.length > 0 && selectedCount === visibleProducts.length;
+        selectAllProducts.indeterminate = selectedCount > 0 && selectedCount < visibleProducts.length;
+      }
+
       function updateRecommendations() {
-        const recommended = recommendationMap[profession.value] || [];
+        const availableProducts = recommendationMap[profession.value] || [];
+        const defaultSelectedProducts = ['Lawyer', 'Notary'].includes(profession.value)
+          ? ['product-idv']
+          : availableProducts;
         document.querySelectorAll('input[name="products"]').forEach(input => {
-          const showProduct = recommended.includes(input.id);
-          input.checked = showProduct;
+          const showProduct = availableProducts.includes(input.id);
+          input.checked = showProduct && defaultSelectedProducts.includes(input.id);
           input.closest('.product').hidden = !showProduct;
         });
+        updateSelectAllState();
+        productSelectionNote.hidden = ['Lawyer', 'Notary'].includes(profession.value);
         const copy = document.getElementById('product-recommendation-copy');
         copy.textContent = profession.value
           ? `Based on your selection (${profession.value}), we’ve identified the products available to you.`
           : 'Review the recommended products before continuing.';
         trackEvent('product_recommendation_viewed', {
           profession: profession.value,
-          product_ids: recommended.map(id => id.replace('product-', ''))
+          product_ids: availableProducts.map(id => id.replace('product-', '')),
+          default_selected_product_ids: defaultSelectedProducts.map(id => id.replace('product-', ''))
         });
       }
 
@@ -1622,6 +1677,19 @@
         } else {
           closeCombobox(profession, professionOptionsList);
         }
+      });
+      selectAllProducts.addEventListener('change', () => {
+        const visibleProducts = getVisibleProductInputs();
+        visibleProducts.forEach(input => { input.checked = selectAllProducts.checked; });
+        updateSelectAllState();
+        trackEvent('product_select_all_changed', {
+          selected: selectAllProducts.checked,
+          profession: profession.value,
+          product_ids: visibleProducts.map(input => input.id.replace('product-', ''))
+        });
+      });
+      document.querySelectorAll('input[name="products"]').forEach(input => {
+        input.addEventListener('change', updateSelectAllState);
       });
       firmName.addEventListener('input', () => {
         if (addingFirmManually) { addingFirmManually = false; manualFirm.classList.remove('visible'); manualFirmName.required = false; }
