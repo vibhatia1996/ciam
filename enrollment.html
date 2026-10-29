@@ -397,6 +397,26 @@
       font-size: 12px;
     }
 
+    .hint-action {
+      display: inline;
+      margin: 0;
+      padding: 0;
+      color: var(--blue);
+      background: transparent;
+      border: 0;
+      font: inherit;
+      font-weight: 600;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    .hint-action:hover { color: var(--navy-dark); }
+
+    .hint-action:focus-visible {
+      outline: 2px solid var(--blue);
+      outline-offset: 2px;
+    }
+
     select {
       appearance: none;
       background-image:
@@ -925,7 +945,7 @@
                 <button class="combobox-trigger" id="firm-trigger" type="button" aria-label="Show firm options" disabled>⌄</button>
                 <ul class="combobox-list" id="firm-options" role="listbox" hidden></ul>
               </div>
-              <p class="field-hint">Start typing to search, then select a firm from the results.</p>
+              <p class="field-hint">Start typing to search, then select a firm from the results. Can’t find it? <button class="hint-action" id="add-firm-manually" type="button">Add manually</button>.</p>
               <p class="error-message" role="alert">Select a firm or organization from the list, or add one manually.</p>
               <div class="manual-firm" id="manual-firm" aria-live="polite">
                 <div class="field">
@@ -957,7 +977,7 @@
                 <button class="combobox-trigger" id="user-trigger" type="button" aria-label="Show contact options">⌄</button>
                 <ul class="combobox-list" id="user-options" role="listbox" hidden></ul>
               </div>
-              <p class="field-hint" id="user-search-hint">Start typing to search for a user at the selected firm.</p>
+              <p class="field-hint" id="user-search-hint"><span id="user-search-hint-copy">Start typing to search for a user at the selected firm.</span> Can’t find them? <button class="hint-action" id="add-contact-manually" type="button">Add manually</button>.</p>
               <p class="error-message" role="alert">Select a user from the list, or add one manually.</p>
             </div>
           </div>
@@ -1114,10 +1134,12 @@
       const firmTrigger = document.getElementById('firm-trigger');
       const manualFirm = document.getElementById('manual-firm');
       const manualFirmName = document.getElementById('manual-firm-name');
+      const addFirmManually = document.getElementById('add-firm-manually');
       let addingFirmManually = false;
       const userSearch = document.getElementById('user-search');
       const userOptions = document.getElementById('user-options');
       const userTrigger = document.getElementById('user-trigger');
+      const addContactManually = document.getElementById('add-contact-manually');
       const userDetails = document.getElementById('user-details');
       const accuracyFeedback = document.getElementById('accuracy-feedback');
       const accuracyFeedbackTrigger = document.getElementById('accuracy-feedback-trigger');
@@ -1295,6 +1317,20 @@
         profession.setCustomValidity(match ? '' : 'Select a profession from the list.');
       }
 
+      function activateManualFirm() {
+        addingFirmManually = true;
+        manualFirm.classList.add('visible');
+        manualFirmName.required = true;
+        firmName.value = 'Add a firm or organization manually';
+        firmName.setCustomValidity('');
+        document.getElementById('firm-name-field').classList.remove('invalid');
+        closeCombobox(firmName, firmOptions);
+        manualFirmName.focus();
+        usersForFirm = '';
+        resetUserSelection();
+        trackEvent('firm_manual_entry_selected', { province: province.value });
+      }
+
       function renderFirmResults() {
         const query = firmName.value.trim().toLowerCase();
         const firms = (firmsByProvince[province.value] || [])
@@ -1328,19 +1364,7 @@
         addButton.type = 'button';
         addButton.className = 'combobox-option combobox-add';
         addButton.textContent = "Can't find your firm or organization? Add it manually";
-        addButton.addEventListener('click', () => {
-          addingFirmManually = true;
-          manualFirm.classList.add('visible');
-          manualFirmName.required = true;
-          firmName.value = 'Add a firm or organization manually';
-          firmName.setCustomValidity('');
-          document.getElementById('firm-name-field').classList.remove('invalid');
-          closeCombobox(firmName, firmOptions);
-          manualFirmName.focus();
-          usersForFirm = '';
-          resetUserSelection();
-          trackEvent('firm_manual_entry_selected', { province: province.value });
-        });
+        addButton.addEventListener('click', activateManualFirm);
         addItem.appendChild(addButton);
         const results = items.length ? items : [createEmptyResult('No matching firms found.')];
         firmOptions.replaceChildren(...results, addItem);
@@ -1426,7 +1450,26 @@
         availableUsers = createFirmUsers(selectedFirm);
         userOptions.replaceChildren();
         resetUserSelection();
-        document.getElementById('user-search-hint').textContent = `Search users associated with ${selectedFirm}.`;
+        document.getElementById('user-search-hint-copy').textContent = `Search users associated with ${selectedFirm}.`;
+      }
+
+      function activateManualContact() {
+        addingContactManually = true;
+        selectedUser = null;
+        userSearch.value = 'Add a primary contact manually';
+        userSearch.setCustomValidity('');
+        document.getElementById('user-search-field').classList.remove('invalid');
+        userDetails.classList.remove('visible');
+        accuracyFeedback.classList.remove('visible');
+        accuracyComments.classList.remove('visible');
+        accuracyFeedbackTrigger.setAttribute('aria-expanded', 'false');
+        accuracyFeedbackTrigger.setAttribute('aria-pressed', 'false');
+        accuracyCommentsInput.value = '';
+        manualContact.classList.add('visible');
+        manualContactRequiredIds.forEach(id => { document.getElementById(id).required = true; });
+        closeCombobox(userSearch, userOptions);
+        document.getElementById('manual-first-name').focus();
+        trackEvent('profile_manual_entry_selected', { firm: usersForFirm });
       }
 
       function renderUserResults() {
@@ -1468,24 +1511,7 @@
         addButton.type = 'button';
         addButton.className = 'combobox-option combobox-add';
         addButton.textContent = "Can't find the primary contact? Add them manually";
-        addButton.addEventListener('click', () => {
-          addingContactManually = true;
-          selectedUser = null;
-          userSearch.value = 'Add a primary contact manually';
-          userSearch.setCustomValidity('');
-          document.getElementById('user-search-field').classList.remove('invalid');
-          userDetails.classList.remove('visible');
-          accuracyFeedback.classList.remove('visible');
-          accuracyComments.classList.remove('visible');
-          accuracyFeedbackTrigger.setAttribute('aria-expanded', 'false');
-          accuracyFeedbackTrigger.setAttribute('aria-pressed', 'false');
-          accuracyCommentsInput.value = '';
-          manualContact.classList.add('visible');
-          manualContactRequiredIds.forEach(id => { document.getElementById(id).required = true; });
-          closeCombobox(userSearch, userOptions);
-          document.getElementById('manual-first-name').focus();
-          trackEvent('profile_manual_entry_selected', { firm: usersForFirm });
-        });
+        addButton.addEventListener('click', activateManualContact);
         addItem.appendChild(addButton);
         const results = items.length ? items : [createEmptyResult('No matching contacts found.')];
         userOptions.replaceChildren(...results, addItem);
@@ -1662,6 +1688,8 @@
       });
 
       province.addEventListener('change', updateFirmOptions);
+      addFirmManually.addEventListener('click', activateManualFirm);
+      addContactManually.addEventListener('click', activateManualContact);
       profession.addEventListener('input', () => {
         profession.setCustomValidity('');
         renderProfessionOptions();
